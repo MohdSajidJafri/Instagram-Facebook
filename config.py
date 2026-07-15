@@ -58,6 +58,18 @@ YT_CLIENT_SECRET = _env("YT_CLIENT_SECRET_VALUE")
 YT_REFRESH_TOKEN = _env("YT_REFRESH_TOKEN")
 YT_PRIVACY = _env("YOUTUBE_PRIVACY", "public")
 
+# ── Cloudinary ───────────────────────────────────────────────
+CLOUDINARY_CLOUD_NAME = _env("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = _env("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = _env("CLOUDINARY_API_SECRET")
+
+# ── Instagram & Facebook Graph API ───────────────────────────
+IG_ACCESS_TOKEN = _env("IG_ACCESS_TOKEN")
+IG_ACCOUNT_ID = _env("IG_ACCOUNT_ID")
+IG_API_VERSION = _env("IG_API_VERSION", "v20.0")
+FB_PAGE_ID = _env("FB_PAGE_ID")
+FB_PAGE_ACCESS_TOKEN = _env("FB_PAGE_ACCESS_TOKEN")
+
 # ── Instagram ────────────────────────────────────────────────
 IG_USERNAME = _env("IG_USERNAME")
 IG_PASSWORD = _env("IG_PASSWORD")

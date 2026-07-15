@@ -187,16 +187,7 @@ def main() -> None:
         if not args.no_upload:
             print(f"\n📤 Upload phase…")
 
-            yt_desc = _build_description(style, title, "youtube")
             ig_desc = _build_description(style, title, "instagram")
-
-            from upload_youtube import upload_short
-            # Truncate title if needed to stay under safety threshold, then append tags
-            upload_title = f"{title} #shorts #gta6 #viral"
-            if len(upload_title) > 95:
-                upload_title = f"{title[:75]}... #shorts #gta6 #viral"
-            upload_short(video_path, title=upload_title, description=yt_desc,
-                         privacy=args.privacy)
 
             from upload_instagram import upload_reel
             upload_reel(video_path, caption=ig_desc)
