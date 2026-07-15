@@ -24,8 +24,8 @@ from render_short import render
 STYLES = ["chaotic", "meme", "story", "npc"]
 
 # Viral hashtag pools (combining best-performing generic gaming tags, targeted GTA 6 buzz tags, and requested viral categories)
-YT_HASHTAGS = "#gaming #gamingclips #gamingvideos #funnygaming #gamingmoments #viralshorts #funnymoments #gamer #clip #gamingcommunity #explore #fyp #GamingFails #ViralGaming #GTA6 #Shorts #GamingMemes #Brainrot #GTAVI #gta6leaks #gta6gameplay #gtabrainrot #Viral #Trending #Facts #LifeHack #DIY #Satisfying #Amazing #Funny #Wow #MindBlown #Story #Challenge #Epic #Cool #Comedy #Minecraft #Football #Animals #Food #Dance"
 IG_HASHTAGS = "#gaming #gamingclips #gamingvideos #funnygaming #gamingmoments #viralreels #funnymoments #gamer #clip #gamingcommunity #explorepage #fyp #GamingFails #ViralGaming #GTA6 #reels #GamingMemes #Brainrot #GTAVI #gta6leaks #gta6gameplay #gtabrainrot #Viral #Trending #Facts #LifeHack #DIY #Satisfying #Amazing #Funny #Wow #MindBlown #Story #Challenge #Epic #Cool #Comedy #Minecraft #Football #Animals #Food #Dance"
+FB_HASHTAGS = "#gaming #gamingclips #gamingvideos #funnygaming #gamingmoments #viralreels #funnymoments #gamer #clip #gamingcommunity #explorepage #fyp #GamingFails #ViralGaming #GTA6 #reels #GamingMemes #Brainrot #GTAVI #gta6leaks #gta6gameplay #gtabrainrot #Viral #Trending #Facts #LifeHack #DIY #Satisfying #Amazing #Funny #Wow #MindBlown #Story #Challenge #Epic #Cool #Comedy #Minecraft #Football #Animals #Food #Dance #FacebookReels #FBReels #reelsfb #trendingreels #viralvideos #FBGaming #FacebookGaming"
 
 # Global timeout for the entire pipeline (40 min — CI has 45 min limit)
 import threading
@@ -39,7 +39,7 @@ def _pick_style(force: str | None) -> str:
     return random.choice(STYLES)
 
 
-def _build_description(style: str, title: str, platform: str = "youtube") -> str:
+def _build_description(style: str, title: str, platform: str = "instagram") -> str:
     """Build catchy description with relevant hashtags."""
     hooks = {
         "chaotic": [
@@ -64,8 +64,15 @@ def _build_description(style: str, title: str, platform: str = "youtube") -> str
         ],
     }
     hook = random.choice(hooks.get(style, hooks["chaotic"]))
-    hashtags = YT_HASHTAGS if platform == "youtube" else IG_HASHTAGS
-    return f"{title}\n\n{hook}\n.\n.\n{hashtags}"
+    
+    if platform == "instagram":
+        # Instagram has a strict limit of 30 hashtags. Exceeding this causes the API to silently strip the entire caption.
+        # We will select the first 25 hashtags to stay safe.
+        tags_list = [tag for tag in IG_HASHTAGS.split() if tag.startswith("#")]
+        ig_tags = " ".join(tags_list[:25])
+        return f"{title}\n\n{hook}\n.\n.\n{ig_tags}"
+    else:
+        return f"{title}\n\n{hook}\n.\n.\n{FB_HASHTAGS}"
 
 
 def main() -> None:
@@ -81,14 +88,11 @@ def main() -> None:
         ap = argparse.ArgumentParser(
             description="GTA V Brainrot Shorts — Full Automation Pipeline"
         )
-        ap.add_argument("--no-upload", action="store_true", help="Skip YouTube/IG upload")
+        ap.add_argument("--no-upload", action="store_true", help="Skip Instagram/Facebook Reels upload")
         ap.add_argument("--skip-download", action="store_true", help="Skip downloading new clips")
         ap.add_argument("--style", default="random",
                         choices=["random", "chaotic", "meme", "story", "npc"],
                         help="Brainrot style (default: random rotation)")
-        ap.add_argument("--privacy", default=config.YT_PRIVACY,
-                        choices=["private", "unlisted", "public"],
-                        help="YouTube privacy setting")
         args = ap.parse_args()
 
         style = _pick_style(args.style)
@@ -188,9 +192,10 @@ def main() -> None:
             print(f"\n📤 Upload phase…")
 
             ig_desc = _build_description(style, title, "instagram")
+            fb_desc = _build_description(style, title, "facebook")
 
             from upload_instagram import upload_reel
-            upload_reel(video_path, caption=ig_desc)
+            upload_reel(video_path, caption=ig_desc, fb_caption=fb_desc)
         else:
             print(f"\n⏭ Skipping upload (--no-upload)")
 

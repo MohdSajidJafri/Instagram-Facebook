@@ -52,11 +52,6 @@ OUTPUT_WIDTH = 1080
 OUTPUT_HEIGHT = 1920
 FPS = 60
 
-# ── YouTube ──────────────────────────────────────────────────
-YT_CLIENT_ID = _env("YT_CLIENT_ID")
-YT_CLIENT_SECRET = _env("YT_CLIENT_SECRET_VALUE")
-YT_REFRESH_TOKEN = _env("YT_REFRESH_TOKEN")
-YT_PRIVACY = _env("YOUTUBE_PRIVACY", "public")
 
 # ── Cloudinary ───────────────────────────────────────────────
 CLOUDINARY_CLOUD_NAME = _env("CLOUDINARY_CLOUD_NAME")

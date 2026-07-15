@@ -43,6 +43,7 @@ def _manual_upload_fallback(video_path: Path, caption: str) -> str:
 def upload_reel(
     video_path: Path,
     caption: str = "",
+    fb_caption: str = "",
 ) -> str:
     """
     Uploads a local short to Instagram Reels.
@@ -189,12 +190,13 @@ def upload_reel(
                     raise Exception(f"Facebook upload failed: {fb_upload_res.get('error', {}).get('message', 'Unknown error')}")
                 
                 print("   Facebook upload complete. Finalizing Reel publication...")
+                fb_desc = fb_caption or caption
                 finish_payload = {
                     "upload_phase": "finish",
                     "access_token": fb_access_token,
                     "video_id": fb_video_id,
                     "video_state": "PUBLISHED",
-                    "description": caption
+                    "description": fb_desc
                 }
                 fb_publish_res = requests.post(fb_url, data=finish_payload).json()
                 
