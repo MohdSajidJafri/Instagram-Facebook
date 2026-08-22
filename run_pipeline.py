@@ -23,9 +23,9 @@ from render_short import render
 
 STYLES = ["chaotic", "meme", "story", "npc"]
 
-# Viral hashtag pools (combining best-performing generic gaming tags, targeted GTA 6 buzz tags, and requested viral categories)
-IG_HASHTAGS = "#gaming #gamingclips #gamingvideos #funnygaming #gamingmoments #viralreels #funnymoments #gamer #clip #gamingcommunity #explorepage #fyp #GamingFails #ViralGaming #GTA6 #reels #GamingMemes #Brainrot #GTAVI #gta6leaks #gta6gameplay #gtabrainrot #Viral #Trending #Facts #LifeHack #DIY #Satisfying #Amazing #Funny #Wow #MindBlown #Story #Challenge #Epic #Cool #Comedy #Minecraft #Football #Animals #Food #Dance"
-FB_HASHTAGS = "#gaming #gamingclips #gamingvideos #funnygaming #gamingmoments #viralreels #funnymoments #gamer #clip #gamingcommunity #explorepage #fyp #GamingFails #ViralGaming #GTA6 #reels #GamingMemes #Brainrot #GTAVI #gta6leaks #gta6gameplay #gtabrainrot #Viral #Trending #Facts #LifeHack #DIY #Satisfying #Amazing #Funny #Wow #MindBlown #Story #Challenge #Epic #Cool #Comedy #Minecraft #Football #Animals #Food #Dance #FacebookReels #FBReels #reelsfb #trendingreels #viralvideos #FBGaming #FacebookGaming"
+# Curated high-relevance viral hashtag pools (keeping under 7 tags to comply with Meta anti-spam policies)
+IG_HASHTAGS = "#GTA6 #GTAVI #gaming #gamingmemes #brainrot #viralreels #fyp"
+FB_HASHTAGS = "#GTA6 #GTAVI #gaming #gamingmemes #brainrot #FacebookReels #FBGaming"
 
 # Global timeout for the entire pipeline (40 min — CI has 45 min limit)
 import threading
@@ -64,15 +64,8 @@ def _build_description(style: str, title: str, platform: str = "instagram") -> s
         ],
     }
     hook = random.choice(hooks.get(style, hooks["chaotic"]))
-    
-    if platform == "instagram":
-        # Instagram has a strict limit of 30 hashtags. Exceeding this causes the API to silently strip the entire caption.
-        # We will select the first 25 hashtags to stay safe.
-        tags_list = [tag for tag in IG_HASHTAGS.split() if tag.startswith("#")]
-        ig_tags = " ".join(tags_list[:25])
-        return f"{title}\n\n{hook}\n.\n.\n{ig_tags}"
-    else:
-        return f"{title}\n\n{hook}\n.\n.\n{FB_HASHTAGS}"
+    hashtags = IG_HASHTAGS if platform == "instagram" else FB_HASHTAGS
+    return f"{title}\n\n{hook}\n.\n.\n{hashtags}"
 
 
 def main() -> None:
