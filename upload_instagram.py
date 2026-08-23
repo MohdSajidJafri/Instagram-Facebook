@@ -5,9 +5,20 @@ Falls back gracefully to manual upload guidelines if credentials are not configu
 """
 from __future__ import annotations
 
+import sys
 import time
 from pathlib import Path
 import requests
+
+# Windows UTF-8 console safety
+if sys.platform == "win32":
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 import config
 

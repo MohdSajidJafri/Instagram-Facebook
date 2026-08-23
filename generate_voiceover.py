@@ -3,14 +3,27 @@ Generate voiceover audio using Edge TTS (free, no API key needed).
 Synthesizes the brainrot narration script into an audio file.
 Returns duration and sentence-level timings for captions.
 All async/subprocess calls have timeouts to prevent indefinite hangs.
+Strict no-emoji policy enforced to prevent Edge TTS from spelling out emoji names.
 """
 from __future__ import annotations
 
 import asyncio
+import re
 import subprocess
 import sys
+import unicodedata
 from pathlib import Path
 from typing import TypedDict
+
+# Windows UTF-8 console safety
+if sys.platform == "win32":
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 import config
 
@@ -23,6 +36,38 @@ class SentenceTiming(TypedDict):
     text: str
     offset_ms: int
     duration_ms: int
+
+
+def _strip_emojis(text: str) -> str:
+    """
+    Comprehensive emoji, pictograph, and symbol removal using unicodedata
+    and unicode regex to guarantee no emoji reaches Edge TTS.
+    """
+    if not text:
+        return ""
+
+    emoji_pattern = re.compile(
+        "["
+        "\U00010000-\U0010FFFF"  # Supplementary Multilingual Planes (emojis, pictographs, symbols)
+        "\U00002600-\U000027BF"  # Miscellaneous Symbols & Dingbats
+        "\U00002300-\U000023FF"  # Miscellaneous Technical
+        "\U00002B50-\U00002B55"  # Star / Circle symbols
+        "\U0000200D"              # Zero-width joiner
+        "\U0000FE0E-\U0000FE0F"  # Variation selectors
+        "]+",
+        flags=re.UNICODE,
+    )
+    text = emoji_pattern.sub("", text)
+
+    filtered_chars: list[str] = []
+    for ch in text:
+        cat = unicodedata.category(ch)
+        if cat in ("So", "Sk", "Cs", "Cn"):
+            continue
+        filtered_chars.append(ch)
+
+    cleaned = "".join(filtered_chars)
+    return re.sub(r"\s+", " ", cleaned).strip()
 
 
 def _ffprobe_duration(path: Path) -> float:
@@ -81,6 +126,7 @@ def synthesize_brainrot_voiceover(
         narration: The brainrot script text to speak.
         output_path: Where to save the MP3. Default: data/output/voiceover.mp3.
         voice: Edge TTS voice name. Default: from config.
+        rate: Speed rate (e.g. '-8%'). Default: from config.
     
     Returns:
         Tuple of (total_duration_seconds, sentence_timings)
@@ -88,15 +134,19 @@ def synthesize_brainrot_voiceover(
     if output_path is None:
         output_path = config.OUTPUT_DIR / "voiceover.mp3"
     voice = voice or config.TTS_VOICE
-
     rate = rate or config.TTS_RATE
+
+    # Strictly strip any emojis and markdown before synthesis
+    clean_narration = _strip_emojis(narration)
+    clean_narration = clean_narration.replace("**", "").replace("__", "").replace("*", "").replace("`", "")
+
     # Normalize casing to prevent Edge TTS from spelling out ALL CAPS emphasis words
-    words = narration.split()
+    words = clean_narration.split()
     normalized_words = []
     for w in words:
         clean_w = w.strip(".,!?;:\"'-")
-        if clean_w.upper() in ["GTA", "NPC", "POV", "CI", "IG", "YT"]:
-            normalized_words.append(w.upper())  # Keep acronyms capitalized
+        if clean_w.upper() in ["GTA", "NPC", "POV", "CI", "IG", "YT", "USA", "FBI", "CIA"]:
+            normalized_words.append(w.upper())  # Keep known acronyms capitalized
         elif clean_w.isupper() and len(clean_w) > 1:
             # It's an emphasis word (ALL CAPS) - lowercase it to make it sound natural
             normalized_words.append(w.lower())

@@ -14,10 +14,20 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Windows UTF-8 console safety
+if sys.platform == "win32":
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 import config
 from download_clips import download_fresh_clips, list_existing_raw
 from process_clips import process_all_raw, get_random_clip
-from generate_script import generate_brainrot_script
+from generate_script import generate_brainrot_script, _strip_emojis
 from generate_voiceover import synthesize_brainrot_voiceover
 from render_short import render
 
@@ -176,7 +186,7 @@ def main() -> None:
         # ── Step 6: Render ──
         print(f"\n🎬 Step 6/6: Rendering final 9:16 short with kinetic captions…")
         video_path = config.OUTPUT_DIR / "final_short.mp4"
-        render(clip, audio_path, narration, output_path=video_path,
+        render(clip, audio_path, clean_narration, output_path=video_path,
                sentence_timings=sentence_timings, style=style,
                emphasis_words=emphasis_words, video_title=title)
 

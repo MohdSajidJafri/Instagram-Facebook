@@ -38,7 +38,7 @@ CLIP_MAX_DURATION = float(_env("CLIP_LENGTH_MAX", "55"))
 
 # ── Groq LLM ─────────────────────────────────────────────────
 GROQ_API_KEY = _env("GROQ_API_KEY")
-GROQ_MODEL = _env("GROQ_MODEL", "llama-3.1-8b-instant")
+GROQ_MODEL = _env("GROQ_MODEL", "openai/gpt-oss-20b")
 
 # ── TTS ──────────────────────────────────────────────────────
 TTS_VOICE = _env("EDGE_TTS_VOICE", "en-US-BrianMultilingualNeural")

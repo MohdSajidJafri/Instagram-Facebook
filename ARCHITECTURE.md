@@ -88,7 +88,7 @@ data/clips/ (15-40s segments)
 | `CLIP_MIN_DURATION` | `15` | Minimum clip length in seconds |
 | `CLIP_MAX_DURATION` | `40` | Maximum clip length in seconds |
 | `GROQ_API_KEY` | from `.env` | Groq LLM API key |
-| `GROQ_MODEL` | `llama-3.1-8b-instant` | Groq model name |
+| `GROQ_MODEL` | `openai/gpt-oss-20b` | Groq model name |
 | `TTS_VOICE` | `en-US-BrianMultilingualNeural` | Default Edge TTS voice |
 | `CLOUDINARY_CLOUD_NAME` | from `.env` | Cloudinary Cloud Name |
 | `CLOUDINARY_API_KEY` | from `.env` | Cloudinary API Key |
@@ -130,12 +130,12 @@ data/clips/ (15-40s segments)
 **Purpose:** Generates a viral brainrot script.
 
 **Behavior:**
-- Calls Groq API (Llama-3.1 model) with system prompt
+- Calls Groq API (`openai/gpt-oss-20b` model) with system prompt
 - Rotates between 12 distinct content formats (Facts, Advice, Tiers, POV, Speaker, Lore, etc.)
 - Strips out any emojis from narration for TTS compatibility
 - Performs SFW brand safety scanning using a forbidden terms list
 - Identifies and outputs a clickbait title and 2-3 ALL CAPS keywords for subtitles
-- Loops narration so the punchline connects seamlessly back into the hook
+- Concludes with a definitive, punchy punchline that ends the video decisively
 
 ---
 
