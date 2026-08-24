@@ -341,12 +341,27 @@ def generate_brainrot_script(
 ) -> tuple[str, str, list[str]]:
     """
     Generate a brainrot script using Groq LLM (openai/gpt-oss-20b).
+    Dynamically adapts word count targets from analytics intelligence.
     Returns: (full_narration, title, emphasis_words)
     """
     api_key = config.GROQ_API_KEY or os.environ.get("GROQ_API_KEY")
     if not api_key:
         print("❌ GROQ_API_KEY not set!")
         sys.exit(1)
+
+    # Dynamically read retention-optimized word counts
+    intel_file = config.CACHE_DIR / "analytics_intelligence.json"
+    target_min = 40
+    target_max = 58
+    if intel_file.exists():
+        try:
+            with open(intel_file, "r", encoding="utf-8") as f:
+                intel_data = json.load(f)
+            targets = intel_data.get("script_targets", {})
+            target_min = targets.get("target_word_count_min", 40)
+            target_max = targets.get("target_word_count_max", 58)
+        except Exception:
+            pass
 
     client = Groq(api_key=api_key)
 
@@ -359,9 +374,9 @@ def generate_brainrot_script(
         f"Assigned Hook: Start your HOOK with '{selected_hook}'\n\n"
         f"Requirements:\n"
         f"- HOOK: 5-10 words, must start with '{selected_hook}'\n"
-        f"- BODY: 3-5 short punchy lines (25-45 words total)\n"
+        f"- BODY: 3-5 short punchy lines\n"
         f"- PUNCHLINE: 5-10 words, definitive punchy conclusion ending with a full stop.\n"
-        f"- Total word count across HOOK + BODY + PUNCHLINE must be 40-65 words.\n"
+        f"- Total word count across HOOK + BODY + PUNCHLINE must be {target_min}-{target_max} words.\n"
         f"- Capitalize 2-3 key words in ALL CAPS for emphasis.\n"
         f"- Strictly NO emojis in HOOK, BODY, or PUNCHLINE (emojis ONLY allowed in TITLE).\n"
         f"- NO markdown formatting (no asterisks, bold, or backticks).\n"
@@ -374,7 +389,7 @@ def generate_brainrot_script(
         f"TITLE: <title with 1-2 emojis>"
     )
 
-    print(f"🤖 Groq: generating script using [{selected_format.split(':')[0]}]…")
+    print(f"🤖 Groq: generating script using [{selected_format.split(':')[0]}] (target: {target_min}–{target_max} words)…")
 
     best_result = {
         "full_narration": "",
@@ -461,9 +476,9 @@ def generate_brainrot_script(
             best_result["emphasis"] = emphasis
             best_result["word_count"] = wc
 
-        if 35 <= wc <= 75:
+        if target_min - 5 <= wc <= target_max + 12:
             break
-        user_prompt += "\n\nMake it concise and punchy! MUST be 40-65 words total."
+        user_prompt += f"\n\nMake it concise and punchy! MUST be {target_min}-{target_max} words total."
 
     # If we got nothing useful after all attempts, use fallback
     if not best_result["full_narration"]:

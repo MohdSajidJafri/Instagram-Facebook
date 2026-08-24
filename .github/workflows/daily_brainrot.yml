@@ -2,8 +2,8 @@ name: Daily Brainrot Short
 
 on:
   schedule:
-    # Runs four times daily: 7:30 AM, 1:30 PM, 7:30 PM, 1:30 AM IST (02:00, 08:00, 14:00, 20:00 UTC)
-    - cron: "0 2,8,14,20 * * *"
+    # Runs twice daily at peak engagement hours: 1:30 PM & 7:30 PM IST (08:00 & 14:00 UTC)
+    - cron: "0 8,14 * * *"
   workflow_dispatch:
     inputs:
       style:

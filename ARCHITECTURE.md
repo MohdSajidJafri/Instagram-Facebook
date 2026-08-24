@@ -13,12 +13,13 @@ The pipeline automatically uploads the rendered video to **Cloudinary** for temp
 ```
 GTA_VI_Automation/
 ├── config.py                # Central configuration (paths, API keys, settings)
-├── download_clips.py        # Step 1: Download GTA V gameplay via yt-dlp
-├── process_clips.py         # Step 2: Extract short clips via FFmpeg scene detection
-├── generate_script.py       # Step 3: Generate brainrot script via Groq LLM
-├── generate_voiceover.py    # Step 4: Synthesize voiceover via Edge TTS
+├── analytics_optimizer.py   # Step 0: Meta Graph API retention & style intelligence engine
+├── download_clips.py        # Step 1: Download GTA V gameplay via yt-dlp (403 bypass)
+├── process_clips.py         # Step 2: Extract short clips & anti-duplication rotation tracking
+├── generate_script.py       # Step 3: Generate brainrot script via Groq LLM (adaptive word counts)
+├── generate_voiceover.py    # Step 4: Synthesize voiceover via Edge TTS (clean plain text)
 ├── render_short.py          # Step 5: Render 9:16 video with kinetic captions via FFmpeg
-├── run_pipeline.py          # Orchestrator: runs all steps in sequence
+├── run_pipeline.py          # Orchestrator: runs closed-loop self-optimizing pipeline
 ├── upload_instagram.py      # Automated Instagram Reels & Facebook Page Reels upload
 ├── .env                     # Local config (API keys, credentials) — NEVER COMMIT
 ├── .env.example             # Template for .env
@@ -30,7 +31,7 @@ GTA_VI_Automation/
     ├── clips/               # Committed gameplay clips (tracked in git)
     ├── raw/                 # Downloaded raw videos (gitignored)
     ├── output/              # Generated voiceover.mp3, final_short.mp4 (gitignored)
-    └── cache/               # Session files, download archives (gitignored)
+    └── cache/               # Session files, used_clips.json, analytics_intelligence.json
 ```
 
 ---
@@ -38,26 +39,21 @@ GTA_VI_Automation/
 ## Data Flow
 
 ```
-YouTube (yt-dlp)
+Meta Graph API (Instagram & Facebook Insights)
     │
-    ▼
-data/raw/ (downloaded videos)
+    ▼ [analytics_optimizer.py]
+data/cache/analytics_intelligence.json (retention status, style weights, word count targets)
     │
-    ▼ [FFmpeg scene detection]
-data/clips/ (15-40s segments)
-    │
-    ▼ [random selection]
-1 clip chosen
-    │
-    ├──► generate_script.py  ──► narration (40-65 words) + title + emphasis words
-    │
-    ├──► generate_voiceover.py ──► voiceover.mp3 + sentence timestamps
-    │
-    └──► render_short.py ──► final_short.mp4 (1080x1920, captions, music)
-         │
-         ▼ [Cloudinary Upload]
-    Public URL (CDN)
-         │
+    ├────────────────────────────────────────┐
+    ▼                                        ▼
+Probabilistic Style Selection            Adaptive Target Word Counts
+    │                                        │
+    ▼                                        ▼
+YouTube (yt-dlp 403 bypass)             generate_script.py (Groq LLM)
+    │                                        │
+    ▼                                        ▼
+data/clips/ ──► [Anti-Duplication] ──► Voiceover & Kinetic Render ──► Cloudinary ──► Meta Graph Publish
+```
          ├──► upload_instagram.py (Instagram Reels via Graph API)
          ├──► upload_instagram.py (Facebook Page Reels via Graph API)
          │

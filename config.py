@@ -29,12 +29,13 @@ for d in [RAW_DIR, CLIPS_DIR, OUTPUT_DIR, CACHE_DIR]:
 # ── Clip download settings ───────────────────────────────────
 YTDL_SEARCH_QUERY = _env("YTDL_SEARCH_QUERY", "gta v funny moments gameplay 1080p")
 YTDL_MAX_DOWNLOADS = int(_env("YTDL_MAX_DOWNLOADS", "2"))
-YTDL_FORMAT = _env("YTDL_FORMAT", "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080]")
+YTDL_FORMAT = _env("YTDL_FORMAT", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best")
 
 # ── Clip processing ──────────────────────────────────────────
 SCENE_THRESHOLD = float(_env("SCENE_THRESHOLD", "0.3"))  # 0-1 sensitivity
 CLIP_MIN_DURATION = float(_env("CLIP_LENGTH_MIN", "30"))
 CLIP_MAX_DURATION = float(_env("CLIP_LENGTH_MAX", "55"))
+MAX_CLIPS = int(_env("MAX_CLIPS", "100"))
 
 # ── Groq LLM ─────────────────────────────────────────────────
 GROQ_API_KEY = _env("GROQ_API_KEY")

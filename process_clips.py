@@ -1,9 +1,12 @@
 """
 Split raw gameplay videos into short clips using FFmpeg scene detection.
 Outputs clips in the 15-40 second range suitable for Shorts/Reels.
+Maintains anti-duplication rotation history in data/cache/used_clips.json.
 """
 from __future__ import annotations
 
+import json
+import random
 import subprocess
 import sys
 import tempfile
@@ -23,6 +26,7 @@ import config
 
 # All subprocess calls get a timeout to prevent indefinite hangs
 SUBPROCESS_TIMEOUT = 300  # 5 minutes per ffmpeg operation
+USED_CLIPS_FILE = config.CACHE_DIR / "used_clips.json"
 
 
 def _get_video_duration(path: Path) -> float:
@@ -113,7 +117,6 @@ def _split_into_clips(
 
 def _cleanup_raw_videos(keep_processed: bool = True) -> None:
     """Delete raw videos after processing to save space."""
-    import shutil
     raw_videos = sorted(config.RAW_DIR.glob("*.*"))
     if raw_videos:
         print(f"   🧹 Cleaning up {len(raw_videos)} raw video(s)…")
@@ -121,12 +124,13 @@ def _cleanup_raw_videos(keep_processed: bool = True) -> None:
             v.unlink(missing_ok=True)
 
 
-def _keep_best_clips(max_clips: int = 10) -> None:
+def _keep_best_clips(max_clips: int | None = None) -> None:
     """Only keep the best (largest file-size) clips, delete the rest."""
+    limit = max_clips or getattr(config, "MAX_CLIPS", 100)
     clips = sorted(config.CLIPS_DIR.glob("*.mp4"), key=lambda p: p.stat().st_size, reverse=True)
-    if len(clips) > max_clips:
-        to_delete = clips[max_clips:]
-        print(f"   🧹 Keeping top {max_clips} clips, deleting {len(to_delete)}…")
+    if len(clips) > limit:
+        to_delete = clips[limit:]
+        print(f"   🧹 Keeping top {limit} clips, deleting {len(to_delete)}…")
         for c in to_delete:
             c.unlink(missing_ok=True)
 
@@ -164,9 +168,9 @@ def process_all_raw() -> list[Path]:
         all_clips.extend(clips)
         print(f"   → {len(clips)} usable clips")
 
-    # Cleanup: remove raw files, keep best clips
+    # Cleanup: remove raw files, keep best clips up to MAX_CLIPS
     _cleanup_raw_videos()
-    _keep_best_clips(max_clips=10)
+    _keep_best_clips()
 
     # Re-count remaining clips
     remaining = sorted(config.CLIPS_DIR.glob("*.mp4"))
@@ -175,12 +179,46 @@ def process_all_raw() -> list[Path]:
 
 
 def get_random_clip() -> Path | None:
-    """Pick a random clip from the clips directory."""
+    """
+    Pick a clip from data/clips/ using round-robin anti-duplication history.
+    Never repeats a clip until all available clips have been utilized.
+    """
     clips = sorted(config.CLIPS_DIR.glob("*.mp4"))
     if not clips:
         return None
-    import random
-    return random.choice(clips)
+
+    used_names: list[str] = []
+    if USED_CLIPS_FILE.exists():
+        try:
+            with open(USED_CLIPS_FILE, "r", encoding="utf-8") as f:
+                used_names = json.load(f)
+                if not isinstance(used_names, list):
+                    used_names = []
+        except Exception:
+            used_names = []
+
+    # Find unused clips
+    unused_clips = [c for c in clips if c.name not in used_names]
+
+    # If all clips have been used once, reset history cycle
+    if not unused_clips:
+        print("   🔄 All gameplay clips used in rotation cycle — resetting clip history pool")
+        used_names = []
+        unused_clips = list(clips)
+
+    chosen = random.choice(unused_clips)
+    used_names.append(chosen.name)
+
+    # Save updated rotation history
+    config.CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        with open(USED_CLIPS_FILE, "w", encoding="utf-8") as f:
+            json.dump(used_names, f, indent=2)
+    except Exception as e:
+        print(f"   ⚠ Could not persist used clips history: {e}")
+
+    print(f"   🎬 Anti-duplication rotation: {len(used_names)}/{len(clips)} clips used in current cycle")
+    return chosen
 
 
 if __name__ == "__main__":
